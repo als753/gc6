@@ -22,9 +22,10 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/golangchallenge/gc6/mazelib"
+	"github.com/als753/gc6/mazelib"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"os"
 )
 
 // Defining the icarus command.
@@ -43,6 +44,13 @@ var icarusCmd = &cobra.Command{
 		RunIcarus()
 	},
 }
+
+const (
+	UP = "up"
+	DOWN = "down"
+	RIGHT = "right"
+	LEFT = "left"
+)
 
 func init() {
 	RootCmd.AddCommand(icarusCmd)
@@ -74,7 +82,7 @@ func awake() mazelib.Survey {
 // to move Icarus a given direction
 // Will be used heavily by solveMaze
 func Move(direction string) (mazelib.Survey, error) {
-	if direction == "left" || direction == "right" || direction == "up" || direction == "down" {
+	if direction == LEFT || direction == RIGHT || direction == UP || direction == DOWN {
 
 		contents, err := makeRequest("http://127.0.0.1:" + viper.GetString("port") + "/move/" + direction)
 		if err != nil {
@@ -84,7 +92,7 @@ func Move(direction string) (mazelib.Survey, error) {
 		rep := ToReply(contents)
 		if rep.Victory == true {
 			fmt.Println(rep.Message)
-			// os.Exit(1)
+			 os.Exit(1)
 			return rep.Survey, mazelib.ErrVictory
 		} else {
 			return rep.Survey, errors.New(rep.Message)
@@ -115,12 +123,34 @@ func ToReply(in []byte) mazelib.Reply {
 	return *res
 }
 
-// TODO: This is where you work your magic
 func solveMaze() {
-	_ = awake() // Need to start with waking up to initialize a new maze
-	// You'll probably want to set this to a named value and start by figuring
-	// out which step to take next
+	currentLocation := awake()
+	currentLocation, err := moveThroughMaze(currentLocation, "")
+	fmt.Println(err)
 
-	//TODO: Write your solver algorithm here
+}
 
+func moveThroughMaze(currentLocation mazelib.Survey, lastMove string) (mazelib.Survey, error) {
+	var err error
+	if !currentLocation.Left && lastMove != RIGHT {
+		currentLocation, err = Move(LEFT)
+		currentLocation, err = moveThroughMaze(currentLocation, LEFT)
+		currentLocation, err = Move(RIGHT)
+	}
+	if !currentLocation.Top && lastMove != DOWN {
+		currentLocation, err = Move(UP)
+		currentLocation, err = moveThroughMaze(currentLocation, UP)
+		currentLocation, err = Move(DOWN)
+	}
+	if !currentLocation.Right && lastMove != LEFT {
+		currentLocation, err = Move(RIGHT)
+		currentLocation, err = moveThroughMaze(currentLocation, RIGHT)
+		currentLocation, err = Move(LEFT)
+	}
+	if !currentLocation.Bottom && lastMove != UP {
+		currentLocation, err = Move(DOWN)
+		currentLocation, err = moveThroughMaze(currentLocation, DOWN)
+		currentLocation, err = Move(UP)
+	}
+	return currentLocation, err
 }

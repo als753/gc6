@@ -49,10 +49,10 @@ type Survey struct {
 }
 
 const (
-	N = 1
-	S = 2
-	E = 3
-	W = 4
+	TOP = 1
+	BOTTOM = 2
+	RIGHT = 3
+	LEFT = 4
 )
 
 var ErrVictory error = errors.New("Victory")
@@ -67,26 +67,26 @@ type Room struct {
 
 func (r *Room) AddWall(dir int) {
 	switch dir {
-	case N:
+	case TOP:
 		r.Walls.Top = true
-	case S:
+	case BOTTOM:
 		r.Walls.Bottom = true
-	case E:
+	case RIGHT:
 		r.Walls.Right = true
-	case W:
+	case LEFT:
 		r.Walls.Left = true
 	}
 }
 
-func (r *Room) RmWall(dir int) {
+	func (r *Room) RmWall(dir int) {
 	switch dir {
-	case N:
+	case TOP:
 		r.Walls.Top = false
-	case S:
+	case BOTTOM:
 		r.Walls.Bottom = false
-	case E:
+	case RIGHT:
 		r.Walls.Right = false
-	case W:
+	case LEFT:
 		r.Walls.Left = false
 	}
 }

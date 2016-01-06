@@ -23,13 +23,11 @@ import (
 	"fmt"
 	"os"
 	"time"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-// TODO: Your name here
-var AuthorName = ""
+var AuthorName = "Amanda"
 
 var CfgFile string
 

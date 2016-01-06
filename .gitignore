@@ -1,0 +1,12 @@
+# Intellij
+.idea
+*.iml
+
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.o
+*.a
+*.so
+
+*.exe
+
+gc6

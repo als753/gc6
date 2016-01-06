@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golangchallenge/gc6/mazelib"
+	"github.com/als753/gc6/mazelib"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -218,7 +218,6 @@ func (m *Maze) SetTreasure(x, y int) error {
 }
 
 // Given Icarus's current location, Discover that room
-// Will return ErrVictory if Icarus is at the treasure.
 func (m *Maze) LookAround() (mazelib.Survey, error) {
 	if m.end.X == m.icarus.X && m.end.Y == m.icarus.Y {
 		fmt.Printf("Victory achieved in %d steps \n", m.StepsTaken)
@@ -356,14 +355,86 @@ func fullMaze() *Maze {
 	return z
 }
 
-// TODO: Write your maze creator function here
+func randomLocationInMaze() (x,y int){
+	return rand.Intn(currentMaze.Width()), rand.Intn(currentMaze.Height())
+}
+
 func createMaze() *Maze {
+	sideWinder()
+	currentMaze.SetTreasure(randomLocationInMaze())
+
+	err := currentMaze.SetStartPoint(randomLocationInMaze())
+	if err != nil {
+		currentMaze.SetStartPoint(randomLocationInMaze())
+	}
+
 
 	// TODO: Fill in the maze:
-	// You need to insert a startingPoint for Icarus
-	// You need to insert an EndingPoint (treasure) for Icarus
 	// You need to Add and Remove walls as needed.
 	// Use the mazelib.AddWall & mazelib.RmWall to do this
 
-	return emptyMaze()
+	return currentMaze
 }
+
+func removeEdge(x, y, direction int) {
+	currentMaze.rooms[y][x].RmWall(direction)
+	switch direction {
+	case mazelib.TOP:
+		currentMaze.rooms[y-1][x].RmWall(mazelib.BOTTOM)
+	case mazelib.RIGHT:
+		currentMaze.rooms[y][x+1].RmWall(mazelib.LEFT)
+	case mazelib.BOTTOM:
+		currentMaze.rooms[y+1][x].RmWall(mazelib.TOP)
+	case mazelib.LEFT:
+		currentMaze.rooms[y][x-1].RmWall(mazelib.RIGHT)
+	}
+
+}
+
+func sideWinder()  {
+	currentMaze = fullMaze()
+	row := 0
+	for ; row < currentMaze.Height()-1; row ++ {
+		processRow(row)
+	}
+	processLastRow(currentMaze.Height()-1)
+
+}
+
+func processRow(row int) {
+	currentSet := []mazelib.Coordinate{mazelib.Coordinate{0,row}}
+	for column := 1 ; column < currentMaze.Width(); column ++ {
+		randBool := rand.Intn(2)
+		if randBool == 1 {
+			removeEdge(column, row, mazelib.LEFT)
+			currentSet = append(currentSet, mazelib.Coordinate{column, row})
+		} else {
+			removeFromBottomRandomCell(currentSet)
+			currentSet = append(currentSet[:0], mazelib.Coordinate{column, row})
+		}
+	}
+	removeFromBottomRandomCell(currentSet)
+}
+
+func removeFromBottomRandomCell(currentSet []mazelib.Coordinate){
+	randomCellInSet := currentSet[0]
+	if(len(currentSet) > 1){
+		randomCellInSet = currentSet[rand.Intn(len(currentSet)-1)]
+	}
+	removeEdge(randomCellInSet.X, randomCellInSet.Y, mazelib.BOTTOM)
+}
+
+func processLastRow(row int){
+	removeEdge(0, row, mazelib.TOP)
+	for column := 1 ; column < currentMaze.Width(); column ++ {
+		rowabove, _ := currentMaze.GetRoom(column, row -1)
+		removeEdge(column, row, mazelib.TOP)
+		if rowabove.Walls.Left {
+			removeEdge(column, row, mazelib.LEFT)
+		}
+	}
+}
+
+
+
+
